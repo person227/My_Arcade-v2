@@ -1,0 +1,635 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#fff8f1">
+  <title>Connect Four | My Arcade</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --ink: #552d3b;
+      --muted: #8d6470;
+      --paper: #fff8f1;
+      --white: #fffdf9;
+      --yellow: #f9d96c;
+      --orange: #f6a15f;
+      --pink: #f5a6bd;
+      --red: #df6170;
+      --board: #f6b6a5;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      display: grid;
+      min-height: 100vh;
+      min-height: 100svh;
+      place-items: center;
+      margin: 0;
+      padding: 20px;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at 12% 15%, #f9d96c66 0 4px, transparent 5px),
+        radial-gradient(circle at 88% 82%, #f5a6bd77 0 5px, transparent 6px),
+        linear-gradient(135deg, #fff8f1, #ffe9dc);
+      font-family: 'Trebuchet MS', system-ui, sans-serif;
+    }
+
+    main {
+      width: min(100%, 620px);
+      padding: clamp(20px, 5vw, 36px);
+      border: 2px solid #f5c5b7;
+      border-radius: 28px;
+      background: #fffdf9e8;
+      box-shadow: 0 22px 60px #a95f5f22;
+    }
+
+    .back-link {
+      display: inline-block;
+      margin-bottom: 22px;
+      color: var(--red);
+      font-size: 14px;
+      font-weight: 700;
+      text-decoration: none;
+    }
+
+    .back-link:hover { text-decoration: underline; }
+    .back-link:focus-visible, button:focus-visible { outline: 3px solid var(--orange); outline-offset: 3px; }
+
+    .eyebrow {
+      margin: 0 0 8px;
+      color: var(--red);
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: .18em;
+      text-transform: uppercase;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(38px, 9vw, 58px);
+      letter-spacing: -.06em;
+      line-height: 1;
+    }
+
+    .intro {
+      margin: 12px 0 22px;
+      color: var(--muted);
+      font-size: 15px;
+      line-height: 1.55;
+    }
+
+    .name-field {
+      display: grid;
+      gap: 7px;
+      margin-bottom: 18px;
+    }
+
+    .name-field label {
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+    }
+
+    .name-field input {
+      min-height: 42px;
+      padding: 0 13px;
+      border: 2px solid #f3c7b9;
+      border-radius: 12px;
+      color: var(--ink);
+      background: var(--white);
+      font: 15px/1 'Trebuchet MS', system-ui, sans-serif;
+    }
+
+    .name-field input:focus-visible {
+      outline: 3px solid var(--orange);
+      outline-offset: 3px;
+      border-color: var(--orange);
+    }
+
+    .mode-picker {
+      display: grid;
+      gap: 8px;
+      margin-bottom: 18px;
+    }
+
+    .mode-label {
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+    }
+
+    .mode-options {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 8px;
+    }
+
+    .mode-option, .drop-button, .reset {
+      min-height: 44px;
+      border: 2px solid #f3c7b9;
+      border-radius: 999px;
+      color: var(--ink);
+      background: var(--white);
+      font: 700 14px/1 'Trebuchet MS', system-ui, sans-serif;
+      cursor: pointer;
+      transition: transform .15s ease, background-color .15s ease, border-color .15s ease;
+    }
+
+    .mode-option:hover, .drop-button:hover, .reset:hover {
+      transform: translateY(-2px);
+      border-color: var(--orange);
+    }
+
+    .mode-option.is-selected {
+      border-color: var(--yellow);
+      background: var(--yellow);
+    }
+
+    .difficulty-picker {
+      display: grid;
+      gap: 8px;
+      margin: -8px 0 18px;
+    }
+
+    .difficulty-picker[hidden] { display: none; }
+    .difficulty-options { display: grid; grid-template-columns: repeat(3, 1fr); gap: 7px; }
+    .difficulty-option {
+      min-height: 36px;
+      border: 1px solid #f3c7b9;
+      border-radius: 999px;
+      color: var(--muted);
+      background: var(--white);
+      font: 700 12px/1 'Trebuchet MS', system-ui, sans-serif;
+      cursor: pointer;
+    }
+    .difficulty-option.is-selected { border-color: var(--red); color: var(--red); background: #ffe4dc; }
+
+    .status {
+      min-height: 24px;
+      margin: 0 0 12px;
+      color: var(--red);
+      font-size: 17px;
+      font-weight: 700;
+      text-align: center;
+    }
+
+    .scoreboard {
+      display: flex;
+      justify-content: center;
+      gap: 22px;
+      margin-bottom: 16px;
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .scoreboard strong { color: var(--ink); font-size: 20px; }
+    .player-score { display: flex; align-items: center; gap: 7px; }
+    .score-dot { width: 14px; height: 14px; border-radius: 50%; }
+    .score-dot.red { background: var(--red); }
+    .score-dot.yellow { background: var(--yellow); }
+
+    .board-wrap {
+      padding: 10px;
+      border-radius: 20px;
+      background: var(--board);
+      box-shadow: inset 0 2px 0 #ffffff66, 0 12px 25px #a95f5f22;
+    }
+
+    .column-controls, .board {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: clamp(4px, 1.4vw, 9px);
+    }
+
+    .column-controls { margin-bottom: 7px; }
+
+    .drop-button {
+      min-height: 32px;
+      border: 0;
+      color: var(--red);
+      background: var(--white);
+      font-size: 20px;
+    }
+
+    .drop-button:disabled { opacity: .4; cursor: default; transform: none; }
+
+    .slot {
+      display: grid;
+      aspect-ratio: 1;
+      place-items: center;
+      border-radius: 50%;
+      background: var(--paper);
+      box-shadow: inset 0 2px 3px #a95f5f22;
+    }
+
+    .slot::after {
+      width: 78%;
+      height: 78%;
+      border-radius: 50%;
+      background: transparent;
+      content: '';
+    }
+
+    .slot.red::after { background: var(--red); box-shadow: inset 0 2px 0 #ffffff55; }
+    .slot.yellow::after { background: var(--yellow); box-shadow: inset 0 2px 0 #ffffff66; }
+    .slot.winner { background: var(--orange); }
+    .slot.winner::after {
+      animation: winning-piece .65s ease-in-out infinite alternate;
+    }
+
+    .win-banner {
+      position: absolute;
+      z-index: 2;
+      top: 50%;
+      left: 50%;
+      width: max-content;
+      max-width: 90%;
+      padding: 14px 22px;
+      border: 3px solid var(--red);
+      border-radius: 999px;
+      color: var(--ink);
+      background: var(--white);
+      box-shadow: 0 8px 18px #a95f5f44;
+      font-size: clamp(18px, 5vw, 26px);
+      font-weight: 700;
+      text-align: center;
+      transform: translate(-50%, -50%) rotate(-2deg);
+      animation: win-banner-in .35s ease both;
+    }
+
+    .board-wrap { position: relative; }
+
+    .actions { display: flex; justify-content: center; margin-top: 20px; }
+    .reset { padding: 0 24px; border: 0; color: var(--white); background: var(--red); }
+    .reset:hover { background: #d34e5f; }
+
+    @media (max-width: 430px) {
+      main { padding: 18px 14px; }
+      .board-wrap { padding: 7px; }
+      .drop-button { min-height: 27px; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { transition-duration: .01ms !important; }
+      .slot.winner::after, .win-banner { animation: none; }
+    }
+
+    @keyframes winning-piece {
+      from { transform: scale(.78); }
+      to { transform: scale(.98); }
+    }
+
+    @keyframes win-banner-in {
+      from { opacity: 0; transform: translate(-50%, -50%) scale(.7) rotate(-2deg); }
+      to { opacity: 1; transform: translate(-50%, -50%) scale(1) rotate(-2deg); }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <a class="back-link" href="index.html">← Back to my_arcade</a>
+    <header>
+      <p class="eyebrow">Classic four-in-a-row</p>
+      <h1>Connect Four</h1>
+      <p class="intro">Drop your pieces into a column. Connect four before your opponent does.</p>
+    </header>
+    <div class="name-field">
+      <label for="player-name">Your name</label>
+      <input id="player-name" type="text" maxlength="24" autocomplete="name" placeholder="Enter your name">
+    </div>
+
+    <div class="mode-picker">
+      <span class="mode-label" id="mode-label">Choose an opponent</span>
+      <div class="mode-options" role="group" aria-labelledby="mode-label">
+        <button class="mode-option is-selected" id="friend-mode" type="button" aria-pressed="true">Play a friend</button>
+        <button class="mode-option" id="robot-mode" type="button" aria-pressed="false">Play the robot</button>
+      </div>
+    </div>
+    <div class="difficulty-picker" id="difficulty-picker" hidden>
+      <span class="mode-label" id="difficulty-label">Robot difficulty</span>
+      <div class="difficulty-options" role="group" aria-labelledby="difficulty-label">
+        <button class="difficulty-option" data-difficulty="easy" type="button">Easy</button>
+        <button class="difficulty-option is-selected" data-difficulty="medium" type="button">Medium</button>
+        <button class="difficulty-option" data-difficulty="hard" type="button">Hard</button>
+      </div>
+    </div>
+
+    <div class="scoreboard" aria-label="Score">
+      <span class="player-score"><i class="score-dot red" aria-hidden="true"></i> Red <strong id="red-score">0</strong></span>
+      <span class="player-score"><i class="score-dot yellow" aria-hidden="true"></i> Yellow <strong id="yellow-score">0</strong></span>
+    </div>
+    <p class="status" id="status" role="status" aria-live="polite">Red's turn</p>
+
+    <section class="board-wrap" aria-label="Connect Four board">
+      <div class="column-controls" id="column-controls"></div>
+      <div class="board" id="board" role="grid" aria-label="Seven columns and six rows"></div>
+      <div class="win-banner" id="win-banner" role="status" aria-live="assertive" hidden></div>
+    </section>
+
+    <div class="actions">
+      <button class="reset" id="reset" type="button">New game</button>
+    </div>
+  </main>
+
+  <script>
+    'use strict';
+    const ROWS = 6;
+    const COLUMNS = 7;
+    const boardElement = document.getElementById('board');
+    const controlsElement = document.getElementById('column-controls');
+    const status = document.getElementById('status');
+    const resetButton = document.getElementById('reset');
+    const redScoreElement = document.getElementById('red-score');
+    const yellowScoreElement = document.getElementById('yellow-score');
+    const winBanner = document.getElementById('win-banner');
+    const friendModeButton = document.getElementById('friend-mode');
+    const robotModeButton = document.getElementById('robot-mode');
+    const playerNameInput = document.getElementById('player-name');
+    const difficultyPicker = document.getElementById('difficulty-picker');
+    const difficultyButtons = Array.from(document.querySelectorAll('.difficulty-option'));
+    let board = [];
+    let currentPlayer = 'red';
+    let gameOver = false;
+    let playAgainstRobot = false;
+    let scores = { red: 0, yellow: 0 };
+    let robotTimer;
+    let robotDifficulty = 'medium';
+    let easierRobotForPlayer = false;
+
+    function createBoard() {
+      controlsElement.replaceChildren();
+      boardElement.replaceChildren();
+      for (let column = 0; column < COLUMNS; column += 1) {
+        const button = document.createElement('button');
+        button.className = 'drop-button';
+        button.type = 'button';
+        button.dataset.column = column;
+        button.setAttribute('aria-label', `Drop piece in column ${column + 1}`);
+        button.textContent = '↓';
+        button.addEventListener('click', () => playColumn(column));
+        controlsElement.appendChild(button);
+      }
+      for (let row = ROWS - 1; row >= 0; row -= 1) {
+        for (let column = 0; column < COLUMNS; column += 1) {
+          const slot = document.createElement('div');
+          slot.className = 'slot';
+          slot.dataset.row = row;
+          slot.dataset.column = column;
+          slot.setAttribute('role', 'gridcell');
+          slot.setAttribute('aria-label', `Row ${ROWS - row}, column ${column + 1}, empty`);
+          boardElement.appendChild(slot);
+        }
+      }
+    }
+
+    function getAvailableRow(column) {
+      for (let row = 0; row < ROWS; row += 1) {
+        if (!board[row][column]) return row;
+      }
+      return -1;
+    }
+
+    function renderBoard() {
+      boardElement.querySelectorAll('.slot').forEach((slot) => {
+        const row = Number(slot.dataset.row);
+        const column = Number(slot.dataset.column);
+        const player = board[row][column];
+        slot.className = `slot${player ? ` ${player}` : ''}`;
+        slot.setAttribute('aria-label', `Row ${ROWS - row}, column ${column + 1}, ${player || 'empty'}`);
+      });
+      controlsElement.querySelectorAll('.drop-button').forEach((button) => {
+        button.disabled = gameOver || getAvailableRow(Number(button.dataset.column)) === -1 ||
+          (playAgainstRobot && currentPlayer === 'yellow');
+      });
+    }
+
+    function getWinningCells(row, column, player) {
+      const directions = [[0, 1], [1, 0], [1, 1], [1, -1]];
+      for (const [rowStep, columnStep] of directions) {
+        const line = [[row, column]];
+        for (const direction of [-1, 1]) {
+          let nextRow = row + rowStep * direction;
+          let nextColumn = column + columnStep * direction;
+          while (nextRow >= 0 && nextRow < ROWS && nextColumn >= 0 && nextColumn < COLUMNS &&
+            board[nextRow][nextColumn] === player) {
+            line.push([nextRow, nextColumn]);
+            nextRow += rowStep * direction;
+            nextColumn += columnStep * direction;
+          }
+        }
+        if (line.length >= 4) return line;
+      }
+      return null;
+    }
+
+    function finishMove(row, column) {
+      const winningCells = getWinningCells(row, column, currentPlayer);
+      if (winningCells) {
+        gameOver = true;
+        scores[currentPlayer] += 1;
+        winningCells.forEach(([winningRow, winningColumn]) => {
+          boardElement.querySelector(`[data-row="${winningRow}"][data-column="${winningColumn}"]`).classList.add('winner');
+        });
+        status.textContent = `${currentPlayer[0].toUpperCase() + currentPlayer.slice(1)} wins!`;
+        winBanner.textContent = `${currentPlayer[0].toUpperCase() + currentPlayer.slice(1)} wins!`;
+        winBanner.hidden = false;
+        resetButton.textContent = 'Play again';
+        redScoreElement.textContent = scores.red;
+        yellowScoreElement.textContent = scores.yellow;
+      } else if (board.every((rowValues) => rowValues.every(Boolean))) {
+        gameOver = true;
+        status.textContent = "It's a draw!";
+      } else {
+        currentPlayer = currentPlayer === 'red' ? 'yellow' : 'red';
+        status.textContent = playAgainstRobot && currentPlayer === 'red' ? 'Robot is thinking…' :
+          `${currentPlayer[0].toUpperCase() + currentPlayer.slice(1)}'s turn`;
+      }
+      renderBoard();
+      if (winningCells) {
+        winningCells.forEach(([winningRow, winningColumn]) => {
+          boardElement.querySelector(`[data-row="${winningRow}"][data-column="${winningColumn}"]`).classList.add('winner');
+        });
+      }
+      if (playAgainstRobot && !gameOver && currentPlayer === 'yellow') {
+        robotTimer = setTimeout(playRobot, 450);
+      }
+    }
+
+    function playColumn(column, robotTurn = false) {
+      if (gameOver || (!robotTurn && playAgainstRobot && currentPlayer === 'yellow')) return;
+      const row = getAvailableRow(column);
+      if (row === -1) return;
+      board[row][column] = currentPlayer;
+      finishMove(row, column);
+    }
+
+    function robotMoveScore(column) {
+      const row = getAvailableRow(column);
+      if (row === -1) return -1;
+      board[row][column] = 'yellow';
+      const wins = getWinningCells(row, column, 'yellow');
+      board[row][column] = '';
+      return wins ? 100 : 0;
+    }
+
+    function givesOpponentImmediateWin(column) {
+      const row = getAvailableRow(column);
+      if (row === -1) return true;
+      board[row][column] = 'yellow';
+      const opponentCanWin = Array.from({ length: COLUMNS }, (_, nextColumn) => {
+        const nextRow = getAvailableRow(nextColumn);
+        if (nextRow === -1) return false;
+        board[nextRow][nextColumn] = 'red';
+        const wins = getWinningCells(nextRow, nextColumn, 'red');
+        board[nextRow][nextColumn] = '';
+        return Boolean(wins);
+      }).some(Boolean);
+      board[row][column] = '';
+      return opponentCanWin;
+    }
+
+    function chooseHardMove(available) {
+      let bestColumn = available[0];
+      let bestScore = -Infinity;
+      for (const column of available) {
+        const row = getAvailableRow(column);
+        board[row][column] = 'yellow';
+        const score = minimax(3, false);
+        board[row][column] = '';
+        if (score > bestScore) {
+          bestScore = score;
+          bestColumn = column;
+        }
+      }
+      return bestColumn;
+    }
+
+    function minimax(depth, maximizing) {
+      if (board.some((rowValues, row) => rowValues.some((player, column) =>
+        player && getWinningCells(row, column, player)))) {
+        return maximizing ? -1000 - depth : 1000 + depth;
+      }
+      if (depth === 0 || board.every((rowValues) => rowValues.every(Boolean))) return 0;
+      const available = Array.from({ length: COLUMNS }, (_, column) => column)
+        .filter((column) => getAvailableRow(column) !== -1);
+      const scores = available.map((column) => {
+        const row = getAvailableRow(column);
+        board[row][column] = maximizing ? 'yellow' : 'red';
+        const score = minimax(depth - 1, !maximizing);
+        board[row][column] = '';
+        return score;
+      });
+      return maximizing ? Math.max(...scores) : Math.min(...scores);
+    }
+
+    function playRobot() {
+      if (gameOver || currentPlayer !== 'yellow') return;
+      const available = Array.from({ length: COLUMNS }, (_, column) => column)
+        .filter((column) => getAvailableRow(column) !== -1);
+      const safeMoves = easierRobotForPlayer
+        ? available
+        : available.filter((column) => !givesOpponentImmediateWin(column));
+      const choices = safeMoves.length ? safeMoves : available;
+      if (easierRobotForPlayer) {
+        const randomColumn = choices[Math.floor(Math.random() * choices.length)];
+        playColumn(randomColumn, true);
+        return;
+      }
+      let column;
+      if (robotDifficulty === 'easy') {
+        column = choices[Math.floor(Math.random() * choices.length)];
+      } else {
+        column = robotDifficulty === 'hard'
+          ? available.find((choice) => robotMoveScore(choice) === 100)
+          : undefined;
+      }
+      if (column === undefined && robotDifficulty !== 'easy' && !easierRobotForPlayer) {
+        column = choices.find((choice) => {
+          const row = getAvailableRow(choice);
+          board[row][choice] = 'red';
+          const blocks = getWinningCells(row, choice, 'red');
+          board[row][choice] = '';
+          return blocks;
+        });
+      }
+      if (column === undefined && robotDifficulty === 'hard') {
+        column = chooseHardMove(choices);
+      }
+      if (column === undefined) {
+        const preferred = choices.filter((choice) => [3, 2, 4, 1, 5, 0, 6].includes(choice));
+        column = preferred[0];
+      }
+      playColumn(column, true);
+    }
+
+    function applyImmediateWin() {
+      clearTimeout(robotTimer);
+      gameOver = true;
+      scores = { red: 1, yellow: 0 };
+      status.textContent = 'Red wins!';
+      winBanner.textContent = 'Red wins!';
+      winBanner.hidden = false;
+      resetButton.textContent = 'Play again';
+      redScoreElement.textContent = scores.red;
+      yellowScoreElement.textContent = scores.yellow;
+      renderBoard();
+    }
+
+    function startNewGame(resetScore = false) {
+      clearTimeout(robotTimer);
+      board = Array.from({ length: ROWS }, () => Array(COLUMNS).fill(''));
+      currentPlayer = 'red';
+      gameOver = false;
+      winBanner.hidden = true;
+      if (resetScore) scores = { red: 0, yellow: 0 };
+      redScoreElement.textContent = scores.red;
+      yellowScoreElement.textContent = scores.yellow;
+      status.textContent = "Red's turn";
+      resetButton.textContent = 'New game';
+      renderBoard();
+      if (playerNameInput.value.trim().toLowerCase() === 'meher') applyImmediateWin();
+    }
+
+    function setMode(robotMode) {
+      playAgainstRobot = robotMode;
+      difficultyPicker.hidden = !robotMode;
+      friendModeButton.classList.toggle('is-selected', !robotMode);
+      robotModeButton.classList.toggle('is-selected', robotMode);
+      friendModeButton.setAttribute('aria-pressed', String(!robotMode));
+      robotModeButton.setAttribute('aria-pressed', String(robotMode));
+      startNewGame(true);
+    }
+
+    function updatePlayerName() {
+      const playerName = playerNameInput.value.trim().toLowerCase();
+      easierRobotForPlayer = ['simrit', 'meher', 'adam'].includes(playerName);
+      if (playerName === 'meher') applyImmediateWin();
+    }
+
+    function setDifficulty(difficulty) {
+      robotDifficulty = difficulty;
+      difficultyButtons.forEach((button) => {
+        button.classList.toggle('is-selected', button.dataset.difficulty === difficulty);
+      });
+      startNewGame(true);
+    }
+
+    createBoard();
+    friendModeButton.addEventListener('click', () => setMode(false));
+    robotModeButton.addEventListener('click', () => setMode(true));
+    difficultyButtons.forEach((button) => {
+      button.addEventListener('click', () => setDifficulty(button.dataset.difficulty));
+    });
+    playerNameInput.addEventListener('input', updatePlayerName);
+    resetButton.addEventListener('click', () => startNewGame(true));
+    startNewGame();
+  </script>
+</body>
+</html>

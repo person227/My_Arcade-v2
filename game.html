@@ -1,0 +1,457 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#080d12">
+  <title>Tic Tac Toe | My Arcade</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --background: #080d12;
+      --panel: #111b24;
+      --cell: #172631;
+      --green: #57e389;
+      --blue: #5cb8ff;
+      --text: #eaf4f7;
+      --muted: #9eb2bd;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      display: grid;
+      min-height: 100vh;
+      min-height: 100svh;
+      place-items: center;
+      margin: 0;
+      padding: 24px;
+      color: var(--text);
+      background:
+        radial-gradient(circle at 15% 15%, #123b3133, transparent 32rem),
+        radial-gradient(circle at 85% 85%, #15345455, transparent 30rem),
+        var(--background);
+      font-family: system-ui, sans-serif;
+    }
+
+    main {
+      width: min(100%, 460px);
+      padding: clamp(22px, 6vw, 38px);
+      border: 1px solid #294151;
+      border-radius: 24px;
+      background: #101820ed;
+      box-shadow: 0 24px 80px #0008;
+    }
+
+    .back-link {
+      display: inline-block;
+      margin-bottom: 26px;
+      color: var(--green);
+      font-size: 14px;
+      text-decoration: none;
+    }
+
+    .back-link:hover { text-decoration: underline; }
+
+    .back-link:focus-visible,
+    button:focus-visible {
+      outline: 3px solid var(--green);
+      outline-offset: 4px;
+    }
+
+    .eyebrow {
+      margin: 0 0 8px;
+      color: var(--green);
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: .18em;
+      text-transform: uppercase;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(34px, 9vw, 48px);
+      letter-spacing: -.05em;
+      line-height: 1;
+    }
+
+    .intro {
+      margin: 12px 0 24px;
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.6;
+    }
+
+    .status {
+      min-height: 28px;
+      margin: 0 0 14px;
+      color: var(--blue);
+      font-size: 16px;
+      font-weight: 700;
+      text-align: center;
+    }
+
+    .board {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      width: min(100%, 360px);
+      margin: 0 auto;
+    }
+
+    .cell {
+      display: grid;
+      aspect-ratio: 1;
+      place-items: center;
+      padding: 0;
+      border: 1px solid #2d4554;
+      border-radius: 14px;
+      color: var(--text);
+      background: var(--cell);
+      font: 700 clamp(42px, 14vw, 76px)/1 system-ui, sans-serif;
+      cursor: pointer;
+      transition: background-color .15s ease, transform .15s ease, border-color .15s ease;
+    }
+
+    .cell:not(:disabled):hover {
+      transform: translateY(-2px);
+      border-color: var(--blue);
+      background: #1b3040;
+    }
+
+    .cell[data-mark="X"] { color: var(--green); }
+    .cell[data-mark="O"] { color: var(--blue); }
+    .cell:disabled { cursor: default; }
+    .cell.winner { border-color: var(--green); background: #17372c; }
+
+    .actions {
+      display: flex;
+      justify-content: center;
+      margin-top: 22px;
+    }
+
+    .reset {
+      min-height: 46px;
+      padding: 0 22px;
+      border: 0;
+      border-radius: 999px;
+      color: #07130c;
+      background: var(--green);
+      font: 700 14px/1 system-ui, sans-serif;
+      cursor: pointer;
+      transition: background-color .15s ease, transform .15s ease;
+    }
+
+    .reset:hover {
+      transform: translateY(-2px);
+      background: #7bf0a2;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { transition-duration: .01ms !important; }
+    }
+  </style>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <main>
+    <section class="start-screen" id="start-screen" aria-labelledby="welcome-title">
+      <p class="eyebrow">Welcome to my arcade</p>
+      <h2 id="welcome-title">Ready to play?</h2>
+      <p class="start-copy">Enter your name to start a best-of-three match.</p>
+      <form class="name-form" id="name-form">
+        <label for="player-name">Your name</label>
+        <input id="player-name" name="player-name" type="text" maxlength="18" autocomplete="name" required>
+        <button class="reset start-button" type="submit">Start game</button>
+      </form>
+    </section>
+    <div id="game-content" hidden>
+    <a class="back-link" href="index.html">← Back to my_arcade</a>
+    <header>
+      <p class="eyebrow">Choose your opponent</p>
+      <h1>Tic Tac Toe</h1>
+      <p class="intro">Take turns placing X and O, or test your skills against our arcade robot.</p>
+    </header>
+    <div class="mode-picker">
+      <span class="mode-label" id="mode-label">Game mode</span>
+      <div class="mode-options" role="group" aria-labelledby="mode-label">
+        <button class="mode-option is-selected" id="friend-mode" type="button" aria-pressed="true">Play a friend</button>
+        <button class="mode-option" id="robot-mode" type="button" aria-pressed="false">Play the robot</button>
+      </div>
+    </div>
+    <section class="scoreboard" aria-label="Match score">
+      <div class="score">
+        <span class="score-name" id="x-score-name">X</span>
+        <strong id="x-score">0</strong>
+      </div>
+      <span class="score-divider" aria-hidden="true">:</span>
+      <div class="score">
+        <span class="score-name" id="o-score-name">O</span>
+        <strong id="o-score">0</strong>
+      </div>
+      <p class="round-label" id="round-label">Best of 3 · Round 1</p>
+    </section>
+    <p class="status" id="status" role="status" aria-live="polite">X's turn</p>
+    <div class="board" role="group" aria-label="Tic Tac Toe board">
+      <button class="cell" type="button" data-index="0" aria-label="Row 1, column 1"></button>
+      <button class="cell" type="button" data-index="1" aria-label="Row 1, column 2"></button>
+      <button class="cell" type="button" data-index="2" aria-label="Row 1, column 3"></button>
+      <button class="cell" type="button" data-index="3" aria-label="Row 2, column 1"></button>
+      <button class="cell" type="button" data-index="4" aria-label="Row 2, column 2"></button>
+      <button class="cell" type="button" data-index="5" aria-label="Row 2, column 3"></button>
+      <button class="cell" type="button" data-index="6" aria-label="Row 3, column 1"></button>
+      <button class="cell" type="button" data-index="7" aria-label="Row 3, column 2"></button>
+      <button class="cell" type="button" data-index="8" aria-label="Row 3, column 3"></button>
+    </div>
+    <div class="actions">
+      <button class="reset" id="reset" type="button">New game</button>
+    </div>
+    </div>
+    <div class="win-overlay" id="win-overlay" hidden>
+      <div class="confetti" id="confetti" aria-hidden="true"></div>
+      <div class="win-card" role="status" aria-live="assertive">
+        <p class="eyebrow">Match complete</p>
+        <h2>You Win!</h2>
+        <p id="win-message">Great job!</p>
+      </div>
+    </div>
+  </main>
+  <script>
+    'use strict';
+    const cells = Array.from(document.querySelectorAll('.cell'));
+    const status = document.getElementById('status');
+    const resetButton = document.getElementById('reset');
+    const nameForm = document.getElementById('name-form');
+    const playerNameInput = document.getElementById('player-name');
+    const startScreen = document.getElementById('start-screen');
+    const gameContent = document.getElementById('game-content');
+    const friendModeButton = document.getElementById('friend-mode');
+    const robotModeButton = document.getElementById('robot-mode');
+    const xScore = document.getElementById('x-score');
+    const oScore = document.getElementById('o-score');
+    const xScoreName = document.getElementById('x-score-name');
+    const oScoreName = document.getElementById('o-score-name');
+    const roundLabel = document.getElementById('round-label');
+    const winOverlay = document.getElementById('win-overlay');
+    const confetti = document.getElementById('confetti');
+    const winningLines = [
+      [0, 1, 2], [3, 4, 5], [6, 7, 8],
+      [0, 3, 6], [1, 4, 7], [2, 5, 8],
+      [0, 4, 8], [2, 4, 6]
+    ];
+    let board = Array(9).fill('');
+    let currentPlayer = 'X';
+    let gameOver = false;
+    let playAgainstRobot = false;
+    let robotTimer;
+    let scores = { X: 0, O: 0 };
+    let roundNumber = 1;
+    let playerName = '';
+    let easyRobot = false;
+    let winResetTimer;
+
+    function getWinningLine() {
+      return winningLines.find(([a, b, c]) =>
+        board[a] && board[a] === board[b] && board[a] === board[c]
+      );
+    }
+
+    function updateCell(index, player) {
+      const cell = cells[index];
+      board[index] = player;
+      cell.textContent = player;
+      cell.dataset.mark = player;
+      cell.setAttribute('aria-label', `Row ${Math.floor(index / 3) + 1}, column ${index % 3 + 1}, ${player}`);
+      cell.disabled = true;
+    }
+
+    function completeTurn() {
+      const winningLine = getWinningLine();
+      if (winningLine) {
+        gameOver = true;
+        winningLine.forEach((winningIndex) => cells[winningIndex].classList.add('winner'));
+        scores[currentPlayer] += 1;
+        updateScoreboard();
+        cells.forEach((boardCell) => { boardCell.disabled = true; });
+        if (scores[currentPlayer] === 2) {
+          if (currentPlayer === 'X') {
+            showWinOverlay();
+          } else {
+            status.textContent = `${oScoreName.textContent} wins the match!`;
+            resetButton.textContent = 'Play again';
+          }
+        } else {
+          status.textContent = `${currentPlayer} wins the round!`;
+          resetButton.textContent = 'Next round';
+        }
+      } else if (board.every(Boolean)) {
+        gameOver = true;
+        status.textContent = "It's a draw!";
+        resetButton.textContent = 'Next round';
+      } else {
+        currentPlayer = currentPlayer === 'X' ? 'O' : 'X';
+        status.textContent = playAgainstRobot && currentPlayer === 'X'
+          ? "Your turn (X)"
+          : `${currentPlayer}'s turn`;
+      }
+    }
+
+    function updateScoreboard() {
+      xScore.textContent = scores.X;
+      oScore.textContent = scores.O;
+      roundLabel.textContent = `Best of 3 · Round ${roundNumber}`;
+    }
+
+    function showWinOverlay() {
+      status.textContent = `${playerName} wins the match!`;
+      document.getElementById('win-message').textContent = `${playerName}, you won 2 rounds!`;
+      confetti.replaceChildren();
+      for (let index = 0; index < 36; index += 1) {
+        const piece = document.createElement('span');
+        piece.className = 'confetti-piece';
+        piece.style.setProperty('--delay', `${Math.random() * 0.45}s`);
+        piece.style.setProperty('--x', `${Math.random() * 100}%`);
+        piece.style.setProperty('--color', ['#57e389', '#5cb8ff', '#f5b83d', '#ef6f61'][index % 4]);
+        confetti.appendChild(piece);
+      }
+      winOverlay.hidden = false;
+      winResetTimer = setTimeout(() => {
+        winOverlay.hidden = true;
+        startRound(true);
+      }, 3500);
+    }
+
+    function showImmediateWin() {
+      clearTimeout(robotTimer);
+      clearTimeout(winResetTimer);
+      gameOver = true;
+      scores = { X: 2, O: 0 };
+      updateScoreboard();
+      cells.forEach((cell) => { cell.disabled = true; });
+      status.textContent = `${playerName} wins the match!`;
+      document.getElementById('win-message').textContent = `${playerName}, you won 2 rounds!`;
+      confetti.replaceChildren();
+      for (let index = 0; index < 36; index += 1) {
+        const piece = document.createElement('span');
+        piece.className = 'confetti-piece';
+        piece.style.setProperty('--delay', `${Math.random() * 0.45}s`);
+        piece.style.setProperty('--x', `${Math.random() * 100}%`);
+        piece.style.setProperty('--color', ['#57e389', '#5cb8ff', '#f5b83d', '#ef6f61'][index % 4]);
+        confetti.appendChild(piece);
+      }
+      winOverlay.hidden = false;
+      resetButton.textContent = 'Play again';
+    }
+
+    function getRobotMove() {
+      const emptyCells = board
+        .map((mark, index) => mark ? null : index)
+        .filter((index) => index !== null);
+
+      if (easyRobot && Math.random() < 0.5) {
+        return emptyCells[Math.floor(Math.random() * emptyCells.length)];
+      }
+
+      for (const player of ['O', 'X']) {
+        for (const index of emptyCells) {
+          board[index] = player;
+          const wins = getWinningLine();
+          board[index] = '';
+          if (wins) return index;
+        }
+      }
+
+      if (emptyCells.includes(4)) return 4;
+      const corners = emptyCells.filter((index) => [0, 2, 6, 8].includes(index));
+      if (corners.length) return corners[Math.floor(Math.random() * corners.length)];
+      return emptyCells[Math.floor(Math.random() * emptyCells.length)];
+    }
+
+    function playRobot() {
+      if (gameOver || currentPlayer !== 'O') return;
+      const index = getRobotMove();
+      if (index === undefined) return;
+      updateCell(index, 'O');
+      completeTurn();
+    }
+
+    function playCell(event) {
+      const index = Number(event.currentTarget.dataset.index);
+      if (gameOver || currentPlayer !== 'X' || board[index]) return;
+
+      updateCell(index, 'X');
+      completeTurn();
+      if (playAgainstRobot && !gameOver && currentPlayer === 'O') {
+        status.textContent = 'Robot is thinking…';
+        robotTimer = setTimeout(playRobot, 450);
+      }
+    }
+
+    function setMode(robotMode) {
+      playAgainstRobot = robotMode;
+      oScoreName.textContent = robotMode ? 'Robot' : 'O';
+      friendModeButton.classList.toggle('is-selected', !robotMode);
+      robotModeButton.classList.toggle('is-selected', robotMode);
+      friendModeButton.setAttribute('aria-pressed', String(!robotMode));
+      robotModeButton.setAttribute('aria-pressed', String(robotMode));
+      startNewGame();
+    }
+
+    function startGame(event) {
+      event.preventDefault();
+      playerName = playerNameInput.value.trim();
+      if (!playerName) return;
+      easyRobot = ['simrit', 'meher', 'adam'].includes(playerName.toLowerCase());
+      xScoreName.textContent = playerName;
+      startScreen.hidden = true;
+      gameContent.hidden = false;
+      if (playerName.toLowerCase() === 'meher') showImmediateWin();
+      playerNameInput.blur();
+      cells[0].focus();
+    }
+
+    function startRound(resetMatch = false) {
+      clearTimeout(robotTimer);
+      clearTimeout(winResetTimer);
+      winOverlay.hidden = true;
+      if (resetMatch) {
+        scores = { X: 0, O: 0 };
+        roundNumber = 1;
+      }
+      board = Array(9).fill('');
+      currentPlayer = 'X';
+      gameOver = false;
+      status.textContent = playAgainstRobot ? "Your turn (X)" : "X's turn";
+      resetButton.textContent = 'New game';
+      updateScoreboard();
+      cells.forEach((cell, index) => {
+        cell.textContent = '';
+        cell.disabled = false;
+        delete cell.dataset.mark;
+        cell.classList.remove('winner');
+        cell.setAttribute('aria-label', `Row ${Math.floor(index / 3) + 1}, column ${index % 3 + 1}`);
+      });
+      if (playerName.toLowerCase() === 'meher') showImmediateWin();
+      cells[0].focus();
+    }
+
+    function startNewGame() {
+      if (gameOver && (scores.X === 2 || scores.O === 2)) {
+        startRound(true);
+      } else if (gameOver) {
+        roundNumber += 1;
+        startRound();
+      } else {
+        startRound(true);
+      }
+    }
+
+    cells.forEach((cell) => cell.addEventListener('click', playCell));
+    resetButton.addEventListener('click', startNewGame);
+    friendModeButton.addEventListener('click', () => setMode(false));
+    robotModeButton.addEventListener('click', () => setMode(true));
+    nameForm.addEventListener('submit', startGame);
+    playerNameInput.focus();
+  </script>
+</body>
+</html>

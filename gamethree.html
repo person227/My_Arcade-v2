@@ -1,0 +1,313 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f8efe0">
+  <title>Rock Paper Scissors | My Arcade</title>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    :root {
+      --robot-bg: #e8e8f7;
+      --robot-ink: #38385e;
+      --player-bg: #f8e6d9;
+      --player-ink: #713e3a;
+    }
+
+    .rps-widget {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      max-width: 860px;
+      margin: 30px auto 0;
+      overflow: hidden;
+      border: 1px solid #d2c4bc;
+      border-radius: 28px;
+      box-shadow: 0 18px 50px #5b46351a;
+    }
+
+    .rps-side {
+      position: relative;
+      display: flex;
+      min-height: 340px;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 34px 24px;
+      text-align: center;
+    }
+
+    .rps-side.robot {
+      background: var(--robot-bg);
+      color: var(--robot-ink);
+    }
+
+    .rps-side.player {
+      background: var(--player-bg);
+      color: var(--player-ink);
+    }
+
+    .rps-side h2 {
+      margin: 0 0 8px;
+      font-size: 25px;
+    }
+
+    .rps-side p {
+      margin: 0 0 24px;
+      opacity: .78;
+    }
+
+    .rps-choices {
+      display: grid;
+      width: 100%;
+      max-width: 270px;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+    }
+
+    .rps-choice {
+      display: grid;
+      min-height: 92px;
+      place-items: center;
+      padding: 10px 4px;
+      border: 1px solid currentColor;
+      border-radius: 16px;
+      background: #ffffff80;
+      color: inherit;
+      font: inherit;
+      font-size: 12px;
+      font-weight: 700;
+      transition: transform .25s ease, opacity .25s ease, min-height .4s ease,
+        width .4s ease, background-color .25s ease, box-shadow .25s ease;
+    }
+
+    .rps-choice.player-choice {
+      cursor: pointer;
+    }
+
+    .rps-choice.player-choice:hover,
+    .rps-choice.player-choice:focus-visible {
+      background: #fff8f2;
+      box-shadow: 0 5px 14px #713e3a26;
+      transform: scale(1.12);
+    }
+
+    .rps-choice.robot-choice {
+      cursor: default;
+      opacity: .7;
+    }
+
+    .rps-emoji {
+      display: block;
+      font-size: 35px;
+      transition: font-size .4s ease;
+    }
+
+    .rps-side.player.has-selection .rps-choices,
+    .rps-side.robot.has-selection .rps-choices {
+      display: flex;
+      width: 100%;
+      max-width: none;
+      justify-content: center;
+    }
+
+    .rps-side.has-selection .rps-choice:not(.selected) {
+      width: 0;
+      min-width: 0;
+      min-height: 0;
+      padding: 0;
+      border-width: 0;
+      opacity: 0;
+      overflow: hidden;
+      transform: scale(.2);
+    }
+
+    .rps-side.has-selection .rps-choice.selected {
+      width: min(80%, 300px);
+      min-height: 220px;
+      border-width: 2px;
+      background: #ffffffb8;
+      box-shadow: 0 12px 30px #38385e26;
+      font-size: 17px;
+      transform: scale(1.02);
+    }
+
+    .rps-side.has-selection .rps-choice.selected .rps-emoji {
+      font-size: 105px;
+    }
+
+    .rps-side.robot.is-thinking .rps-choice {
+      opacity: .55;
+    }
+
+    .rps-side.robot.is-thinking .rps-choice.robot-active {
+      opacity: 1;
+      transform: scale(1.12);
+      box-shadow: 0 5px 18px #38385e35;
+    }
+
+    .rps-bottom {
+      max-width: 860px;
+      margin: 18px auto 0;
+      text-align: center;
+    }
+
+    .rps-result {
+      min-height: 28px;
+      margin: 0 0 10px;
+      font-size: 18px;
+      font-weight: 700;
+    }
+
+    .rps-score {
+      margin: 0 0 14px;
+      color: #6b5544;
+      font-size: 14px;
+    }
+
+    .rps-reset {
+      padding: 10px 16px;
+      border: 1px solid #8d665a;
+      border-radius: 10px;
+      background: transparent;
+      color: #713e3a;
+      cursor: pointer;
+      font: inherit;
+      font-weight: 700;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .rps-choice, .rps-emoji { transition: none; }
+    }
+
+    @media (max-width: 600px) {
+      .rps-widget { grid-template-columns: 1fr; }
+      .rps-side { min-height: 270px; padding: 28px 16px; }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <a class="back-link" href="index.html">← Back to my_arcade</a>
+    <header>
+      <p class="eyebrow">Quick challenge</p>
+      <h1>Rock Paper Scissors</h1>
+      <p class="intro">Choose your move and see if you can beat the arcade.</p>
+    </header>
+    <section class="rps-widget" aria-label="Rock Paper Scissors players">
+      <div class="rps-side robot">
+        <h2>Robot</h2>
+        <p>Arcade opponent</p>
+        <div class="rps-choices" aria-label="Robot choices">
+          <div class="rps-choice robot-choice" data-choice="rock"><span class="rps-emoji" aria-hidden="true">✊</span>Rock</div>
+          <div class="rps-choice robot-choice" data-choice="paper"><span class="rps-emoji" aria-hidden="true">✋</span>Paper</div>
+          <div class="rps-choice robot-choice" data-choice="scissors"><span class="rps-emoji" aria-hidden="true">✌️</span>Scissors</div>
+        </div>
+      </div>
+      <div class="rps-side player">
+        <h2>Player 1</h2>
+        <p>Choose your move</p>
+        <div class="rps-choices" role="group" aria-label="Player 1 choices">
+          <button class="rps-choice player-choice" type="button" data-choice="rock">
+            <span class="rps-emoji" aria-hidden="true">✊</span>Rock
+          </button>
+          <button class="rps-choice player-choice" type="button" data-choice="paper">
+            <span class="rps-emoji" aria-hidden="true">✋</span>Paper
+          </button>
+          <button class="rps-choice player-choice" type="button" data-choice="scissors">
+            <span class="rps-emoji" aria-hidden="true">✌️</span>Scissors
+          </button>
+        </div>
+      </div>
+    </section>
+    <section class="rps-bottom" aria-live="polite">
+      <p class="rps-result" id="result" role="status" aria-live="polite">Choose a move to begin.</p>
+      <p class="rps-score">You: <strong id="player-score">0</strong> · Arcade: <strong id="arcade-score">0</strong></p>
+      <button class="rps-reset" id="reset" type="button">Reset score</button>
+    </section>
+  </main>
+  <script>
+    'use strict';
+    const choices = ['rock', 'paper', 'scissors'];
+    const result = document.getElementById('result');
+    const robotSide = document.querySelector('.rps-side.robot');
+    const playerSide = document.querySelector('.rps-side.player');
+    const playerButtons = Array.from(document.querySelectorAll('.player-choice'));
+    const robotChoices = Array.from(document.querySelectorAll('.robot-choice'));
+    const playerScoreElement = document.getElementById('player-score');
+    const arcadeScoreElement = document.getElementById('arcade-score');
+    let playerScore = 0;
+    let arcadeScore = 0;
+    let roundInProgress = false;
+
+    function wait(milliseconds) {
+      return new Promise((resolve) => setTimeout(resolve, milliseconds));
+    }
+
+    function clearSelections() {
+      playerSide.classList.remove('has-selection');
+      robotSide.classList.remove('has-selection', 'is-thinking');
+      playerButtons.forEach((button) => button.classList.remove('selected'));
+      robotChoices.forEach((choice) => choice.classList.remove('selected', 'robot-active'));
+    }
+
+    async function revealRobotChoice(arcadeChoice) {
+      robotSide.classList.add('is-thinking');
+      for (let cycle = 0; cycle < 6; cycle += 1) {
+        const activeChoice = robotChoices[cycle % robotChoices.length];
+        robotChoices.forEach((choice) => choice.classList.remove('robot-active'));
+        activeChoice.classList.add('robot-active');
+        await wait(180);
+      }
+      robotSide.classList.remove('is-thinking');
+      robotChoices.forEach((choice) => choice.classList.remove('robot-active'));
+      robotChoices.find((choice) => choice.dataset.choice === arcadeChoice).classList.add('selected');
+      robotSide.classList.add('has-selection');
+      await wait(450);
+    }
+
+    async function playRound(playerChoice) {
+      if (roundInProgress) return;
+      roundInProgress = true;
+      playerButtons.forEach((button) => { button.disabled = true; });
+      clearSelections();
+      playerButtons.find((button) => button.dataset.choice === playerChoice).classList.add('selected');
+      playerSide.classList.add('has-selection');
+      await wait(450);
+      const arcadeChoice = choices[Math.floor(Math.random() * choices.length)];
+      await revealRobotChoice(arcadeChoice);
+      if (playerChoice === arcadeChoice) {
+        result.textContent = `It's a tie! We both chose ${arcadeChoice}.`;
+      } else if (
+        (playerChoice === 'rock' && arcadeChoice === 'scissors') ||
+        (playerChoice === 'paper' && arcadeChoice === 'rock') ||
+        (playerChoice === 'scissors' && arcadeChoice === 'paper')
+      ) {
+        playerScore += 1;
+        result.textContent = `You win! The robot chose ${arcadeChoice}.`;
+      } else {
+        arcadeScore += 1;
+        result.textContent = `The robot wins! It chose ${arcadeChoice}.`;
+      }
+      playerScoreElement.textContent = playerScore;
+      arcadeScoreElement.textContent = arcadeScore;
+      roundInProgress = false;
+      playerButtons.forEach((button) => { button.disabled = false; });
+    }
+
+    document.querySelectorAll('.player-choice').forEach((button) => {
+      button.addEventListener('click', () => playRound(button.dataset.choice));
+    });
+
+    document.getElementById('reset').addEventListener('click', () => {
+      playerScore = 0;
+      arcadeScore = 0;
+      playerScoreElement.textContent = '0';
+      arcadeScoreElement.textContent = '0';
+      result.textContent = 'Choose a move to begin.';
+      roundInProgress = false;
+      playerButtons.forEach((button) => { button.disabled = false; });
+      clearSelections();
+    });
+  </script>
+</body>
+</html>
